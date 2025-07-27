@@ -4,13 +4,10 @@
 
    ```sh
    SESSION_ID=session_id_here
-   PREFIX= supports multi
+   PREFIX= /
    LANG=en
-   MONGODB_URI= url string
-   GROK_API= 
-   OWNER_NUM= ×××××××××
+   OWNER_NUMBER= ×××××××××
    MODS=××××××,××××××,×××××
-   GEMINI_API_KEY=
    WORKTYPE= private/public
    ```
 
@@ -19,15 +16,17 @@
    To start the bot, run:
 
    ```sh
-   pm2 start . --name xastarl --attach --time
+   pm2 start . --name garfield --attach --time
    ```
 
    To stop the bot, run:
 
    ```sh
-   pm2 stop xastarl
+   pm2 stop garfield
    ```
 
   ## Keys
 
   [Scan](https://hastebin-pair.onrender.com)
+
+  # This bot supports any session id for connection arigato
