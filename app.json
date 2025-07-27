@@ -3,7 +3,7 @@
   "name": "whatsapp-bot",
   "description": "",
   "repository": "https://github.com/naxordeve/whatsapp-bot",
-  "keywords": ["nodejs", "whatsapp"],
+  "keywords": ["nodejs", "whatsapp", "garfield"],
   "success_url": "/",
   "env": {
     "PREFIX": {
@@ -14,24 +14,12 @@
       "description": "WhatsApp number of the bot owner",
       "value": "27686881509"
     },
-    "BOT_NAME": {
-      "description": "Name of your bot",
-      "value": "X-Astral"
-    },
-    "MONGODB_URI": {
-      "description": "MongoDB connection string",
-      "required": false
-    },
     "SESSION_ID": {
       "description": "WhatsApp session ID",
       "required": true
     },
-    "PASTE_BIN_API": {
+    "HASTEBIN": {
       "description": "Your paste key for session id",
-      "required": true
-    },
-    "GROK_API": {
-      "description": "Groq sdk key for ai",
       "required": true
     },
     "WORK_TYPE": {
