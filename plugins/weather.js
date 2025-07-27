@@ -1,13 +1,18 @@
-const axios = require('axios');
-const { Module } = require('../lib/plugins');
+const axios = require('axios')
+const cheerio = require('cheerio')
+const he = require('he')
 
 Module({
   command: 'weather',
   package: 'info',
-  description: 'Get detailed current weather',
+  description: 'Weather forecast'
 })(async (message, match) => {
-  const city = (match || message.quoted?.text || '').trim();
-  if (!city) return await message.send('_city name required_');
-  const { data } = await axios.get(`https://wttr.in/${city}?0T`);
-  await message.send('```\n' + data + '\n```');
-});
+  let city = match || 'Johannesburg'
+  let res = await axios.get(`https://wttr.in/${city}?0`)
+  let $ = cheerio.load(res.data)
+  let raw = $('pre').html()
+  if (!raw) return message.send('err')
+  raw = raw.replace(/<\/?span[^>]*>/g, '')
+  let text = he.decode(raw.trim())
+  message.send('```' + text + '```');
+})
