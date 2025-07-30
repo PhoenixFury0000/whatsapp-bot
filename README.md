@@ -1,5 +1,8 @@
 # whatsapp-bot
 
+
+# Free script
+
 **Variables:**
 
    ```sh
