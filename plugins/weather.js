@@ -1,5 +1,5 @@
 const {Module} = require('../lib/plugins');
-const axios = require('axios')
+var axios = require('axios')
 const cheerio = require('cheerio')
 const he = require('he')
 
