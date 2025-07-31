@@ -21,15 +21,13 @@ Module({
     const q = `${match} site:pinterest.com`;
     const url = `https://www.google.com/search?q=${q}&tbm=isch`;
     const { data } = await axios.get(url, {
-    headers: { 'User-Agent': 'Mozilla/5.0' }
-    });
+    headers: { 'User-Agent': 'Mozilla/5.0' }});
     const $ = cheerio.load(data);
     const images = [];
     $('img').each((_, el) => {
-      const src = $(el).attr('src');
-      if (src?.startsWith('http')) images.push(src);
-    });
+    const src = $(el).attr('data-iurl') || $(el).attr('data-src') || $(el).attr('src');
+    if (src?.startsWith('http')) images.push(src); });
     if (!images.length) return message.send('_eish_');
     img = images[Math.floor(Math.random() * images.length)]; }
-  await message.send({ image: { url: img }, caption: `${match}` });
+    await message.send({ image: { url: img }, caption: `${match}` });
 });
