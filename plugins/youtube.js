@@ -88,3 +88,36 @@ Module({ on: 'text' })(async (message) => {
   fs.unlinkSync(p);
   }
 });
+
+Module({
+  command: 'audio',
+  package: 'downloader',
+  description: 'Search and choose YouTube audio'
+})(async (message, match) => {
+  if (!match) return await message.send('_Give a *query* to search_');
+  const results = await ytApiSearch(match, 12);
+  if (!results.length) return await message.send('_nothin_');
+  let text = `*_${match}_*\n\n`;
+  results.forEach((v, i) => {
+  text += `${i + 1}. *${v.title}*\n\n`; });
+  text += `_Reply with a number to download_`;
+  await message.send(text);
+});
+
+Module({ on: 'text' })(async (message) => {
+  if (!message.quoted) return;
+  const body = message.quoted.body || message.quoted.msg?.text || message.quoted.msg?.caption || '';
+  if (!body.toLowerCase().includes('results for')) return;
+  const lines = body.trim().split('\n').filter(line => /^\d+\.\s/.test(line));
+  const args = parseInt(message.body);
+  if (isNaN(args) || args < 1 || args > lines.length) return;
+  const title = lines[args - 1].replace(/^\d+\.\s\*/, '').replace(/\*$/, '').trim();
+  const results = await ytApiSearch(title, 1);
+  if (!results.length) return await message.send('_rr_');
+  const video = results[0];
+  await message.send(`\`\`\`Downloading: ${video.title}\`\`\``);
+  const path = await DownloadMusic(video.id);
+  if (!fs.existsSync(path)) return await message.send('_er_');
+  await message.send({ audio: fs.readFileSync(path), mimetype: 'audio/mpeg' });
+  fs.unlinkSync(path);
+});  
