@@ -27,47 +27,55 @@ Module({
   fs.unlinkSync(p);
 });
 
+
 Module({
   command: 'play',
-  package: 'downloader',
-  description: 'Play music or video from query'
+  package: 'download',
+  description: 'YouTube video player'
 })(async (message, match) => {
-  if (!match) return await message.send('_Please provide a search query_');
-  const result = await yts(match);
-  if (!result || !result.videos.length) return await message.send('_nofound_');
-  const v = result.videos[0];
-  const thumb = (await axios.get(v.thumbnail, { responseType: 'arraybuffer' })).data;
-  await message.send(
-    {image: Buffer.from(thumb),caption: `*${v.title}*\n\n*🔢Reply with number:*\n\`\`\`\n◆ 1. Audio\n◆ 2. Document\n◆ 3. Video\n\`\`\``,contextInfo: {
-        externalAdReply: {
-          title: v.title,body: '',mediaType: 1,mediaUrl: v.url,renderLargerThumbnail: true,
-          thumbnail: Buffer.from(thumb)
-        }}
-    },
-    { quoted: message });
+  if (!match) return await message.send('_Give a *query* to play the song or video_');
+
+  const res = await yts(match);
+  if (!res.videos.length) return await message.send('_No results found_');
+
+  const video = res.videos[0];
+  const caption = `*_${video.title}_*\n\n\`\`\`1.⬢\`\`\` *audio*\n\`\`\`2.⬢\`\`\` *video*\n\n_*Send a number as a reply to download*_`;
+
+  await message.send({ text: caption });
 });
 
-Module({ on: 'text' })(async (message) => {
+Module({
+  on: 'text'
+})(async (message) => {
   if (!message.quoted) return;
-  const urls = (message.quoted.text || message.quoted.body || '').match(/https?:\/\/[^\s]+/g);
-  if (!urls || !urls.length) return;
-  const url = urls[0];
-  const q = message.body.replace(/[^1-3]/g, '').trim();
-  if (!['1', '2', '3'].includes(q)) return;
-  const id = url.includes('v=') ? url.split('v=')[1] : url.split('/').pop();
-  const result = await yts({ videoId: id });
-  if (!result) return;
-  const title = result.title;
-  let file;
-  if (q === '3') file = await DownloadVideo(id);
-  else file = await DownloadMusic(id);
-  const buffer = fs.readFileSync(file);
-  const size = (fs.statSync(file).size / 1024 / 1024).toFixed(2);
-  if (q === '1') {
-  await message.send({ audio: buffer, mimetype: 'audio/mpeg', fileName: `${title}.mp3` });
-  } else if (q === '2') {
-  await message.send({ document: buffer, mimetype: 'audio/mpeg', fileName: `${title}.mp3` });
-  } else if (q === '3') {
-  await message.send({ video: buffer, mimetype: 'video/mp4', fileName: `${title}.mp4`, caption: `*${title}*\n*${size} MB*\n*${id}*` });}
-  fs.unlinkSync(file);
+
+  const body =
+    message.quoted.body ||
+    message.quoted.msg?.text ||
+    message.quoted.msg?.caption ||
+    '';
+
+  if (!body.includes('⬢')) return;
+
+  const query = body.split('\n')[0].replace(/[*_]/g, '').trim();
+  const res = await yts(query);
+  if (!res.videos.length) return await message.send('_No results found_');
+  const video = res.videos[0];
+
+  try {
+    if (message.body.includes('1')) {
+      const path = await DownloadMusic(video.url);
+      if (!fs.existsSync(path)) return await message.send('_Audio file not found_');
+      const buffer = await fs.promises.readFile(path);
+      await message.send({ audio: buffer, mimetype: 'audio/mpeg' });
+    } else if (message.body.includes('2')) {
+      const path = await DownloadVideo(video.url);
+      if (!fs.existsSync(path)) return await message.send('_Video file not found_');
+      const buffer = await fs.promises.readFile(path);
+      await message.send({ video: buffer, caption: video.title });
+    }
+  } catch (e) {
+    console.error('Media send error:', e);
+    await message.send('_Error sending media_');
+  }
 });
