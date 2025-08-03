@@ -30,17 +30,18 @@ Module({
 })(async (message, match) => {
   if (!match) return await message.send('_Give a yt query or url_');
   const results = await ytApiSearch(match, 1);
-  if (!results.length) return await message.send('_eish_');
+  if (!results.length) return await message.send('_ehe_');
   const video = results[0];
   const id = video.id;
   const title = video.title.replace(/[^\w\s]/g, '') + '.mp3';
-  const thumb = await fetch(video.thumb).then(r => r.buffer());
+  const img = video.thumb && video.thumb.startsWith('http') ? video.thumb : `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+  const thumb = await fetch(img).then(r => r.buffer());
   await message.send(`\`\`\`Downloading: ${video.title}\`\`\``);
   const path = await DownloadMusic(id);
-  if (!fs.existsSync(path)) return await message.send('_err_');
+  if (!fs.existsSync(path)) return await message.send('_eosh_');
   const buffer = await fs.promises.readFile(path);
-  const doc = await AddMp3Meta(buffer, thumb, {title: video.title,artist: video.channel});
-  await message.send({document: doc,mimetype: 'audio/mpeg',fileName: title});
+  const doc = await AddMp3Meta(buffer, thumb, { title: video.title, artist: video.channel });
+  await message.send({ document: doc, mimetype: 'audio/mpeg', fileName: title });
   fs.unlinkSync(path);
 });
 
@@ -90,7 +91,8 @@ Module({ on: 'text' })(async (message) => {
   if (!res.length) return await message.send('_eish_');
   const video = res[0];
   const id = video.id;
-  const thumb = await fetch(video.thumb).then(r => r.buffer());
+  const img = video.thumb && video.thumb.startsWith('http') ? video.thumb : `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+  const thumb = await fetch(img).then(r => r.buffer());
   await message.send(`\`\`\`Downloading: ${video.title}\`\`\``);
   if (message.body.includes('1')) {
   const p = await DownloadMusic(id);
@@ -140,7 +142,9 @@ Module({ on: 'text' })(async (message) => {
   const title = arg[args - 1].split('. ')[1].replace(/\*/g, '').trim();
   const results = await ytApiSearch(title, 1);
   if (!results.length) return await message.send('_rr_');
-  const video = results[0], id = video.id, thumb = await fetch(video.thumb).then(r => r.buffer());
+  const video = results[0], id = video.id; //thumb = await fetch(video.thumb).then(r => r.buffer());
+  const img = video.thumb && video.thumb.startsWith('http') ? video.thumb : `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+  const thumb = await fetch(img).then(r => r.buffer());
   await message.send(`\`\`\`Downloading: ${video.title}\`\`\``);
   const path = await DownloadMusic(id);
   if (!fs.existsSync(path)) return await message.send('_er_');
