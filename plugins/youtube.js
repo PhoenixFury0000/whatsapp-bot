@@ -57,24 +57,30 @@ Module({
   if (!body.includes('⬢')) return;
 
   const query = body.split('\n')[0].replace(/[*_]/g, '').trim();
-  const res = await yts(query);
+  const res = await require('yt-search')(query);
   if (!res.videos.length) return await message.send('_No results found_');
   const video = res.videos[0];
 
   try {
+    const id = video.url.split("v=")[1]?.split("&")[0] || video.url.split("/").pop();
+
     if (message.body.includes('1')) {
-      const path = await DownloadMusic(video.url);
+      const path = await DownloadMusic(id);
+      if (!path || typeof path !== 'string' || path === '1') return await message.send('_Failed to download audio_');
       const audio = fs.readFileSync(path);
       await message.send({ audio, mimetype: 'audio/mpeg' });
+      fs.unlinkSync(path);
 
     } else if (message.body.includes('2')) {
-      const path = await DownloadVideo(video.url);
+      const path = await DownloadVideo(id);
+      if (!path || typeof path !== 'string' || path === '1') return await message.send('_Failed to download video_');
       const videoBuffer = fs.readFileSync(path);
       await message.send({ video: videoBuffer, caption: video.title });
-      fs.unlinkSync(path)
+      fs.unlinkSync(path);
     }
-  } catch (err) {
-    console.error('yt-streamer error:', err?.message || err);
+
+  } catch (e) {
+    console.error('yt-streamer error:', e?.message || e);
     await message.send('_Error sending media_');
   }
 });
