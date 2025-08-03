@@ -107,11 +107,11 @@ Module({
 Module({ on: 'text' })(async (message) => {
   if (!message.quoted) return;
   const body = message.quoted.body || message.quoted.msg?.text || message.quoted.msg?.caption || '';
-  if (!body.toLowerCase().includes('results for')) return;
-  const lines = body.trim().split('\n').filter(line => /^\d+\.\s/.test(line));
+  const lines = body.split('\n');
+  const arg = lines.filter(v => v.trim().match(/^\d+\.\s\*/));
   const args = parseInt(message.body);
-  if (isNaN(args) || args < 1 || args > lines.length) return;
-  const title = lines[args - 1].replace(/^\d+\.\s\*/, '').replace(/\*$/, '').trim();
+  if (isNaN(args) || args < 1 || args > arg.length) return;
+  const title = arg[args - 1].split('. ')[1].replace(/\*/g, '').trim();
   const results = await ytApiSearch(title, 1);
   if (!results.length) return await message.send('_rr_');
   const video = results[0];
@@ -120,4 +120,4 @@ Module({ on: 'text' })(async (message) => {
   if (!fs.existsSync(path)) return await message.send('_er_');
   await message.send({ audio: fs.readFileSync(path), mimetype: 'audio/mpeg' });
   fs.unlinkSync(path);
-});  
+});
