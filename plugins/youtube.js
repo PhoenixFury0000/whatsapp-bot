@@ -4,6 +4,45 @@ const yts = require('yt-search');
 const fetch = require('node-fetch');
 const { Module } = require('../lib/plugins');
 const { DownloadMusic,DownloadVideo } = require('yt-streamer');
+const AddMp3Meta = require('../lib/Class/metadata');
+
+async function ytApiSearch(query, maxResults = 13) {
+  const API_KEY = 'AIzaSyDLH31M0HfyB7Wjttl6QQudyBEq5x9s1Yg';
+  const url = `https://www.googleapis.com/youtube/v3/search?key=${API_KEY}&part=snippet&type=video&maxResults=${maxResults}&q=${query}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${res.statusText}`);
+  const data = await res.json();
+  if (!data.items || !data.items.length) return [];
+  return data.items.map(vid => ({
+    id: vid.id.videoId,
+    title: vid.snippet.title,
+    url: `https://www.youtube.com/watch?v=${vid.id.videoId}`,
+    thumbnail: vid.snippet.thumbnails.high.url,
+    channel: vid.snippet.channelTitle,
+    publishedAt: vid.snippet.publishedAt
+  }));
+}
+
+Module({
+  command: 'song',
+  package: 'downloader',
+  description: 'Download YouTube MP3'
+})(async (message, match) => {
+  if (!match) return await message.send('_Give a yt query or url_');
+  const results = await ytApiSearch(match, 1);
+  if (!results.length) return await message.send('_eish_');
+  const video = results[0];
+  const id = video.id;
+  const title = video.title.replace(/[^\w\s]/g, '') + '.mp3';
+  const thumb = await fetch(video.thumb).then(r => r.buffer());
+  await message.send(`\`\`\`Downloading: ${video.title}\`\`\``);
+  const path = await DownloadMusic(id);
+  if (!fs.existsSync(path)) return await message.send('_err_');
+  const buffer = await fs.promises.readFile(path);
+  const doc = await AddMp3Meta(buffer, thumb, {title: video.title,artist: video.channel});
+  await message.send({document: doc,mimetype: 'audio/mpeg',fileName: title});
+  fs.unlinkSync(path);
+});
 
 Module({
   command: 'ytmp4',
@@ -28,24 +67,6 @@ Module({
   fs.unlinkSync(p);
 });
 
-
-async function ytApiSearch(query, maxResults = 13) {
-  const API_KEY = 'AIzaSyDLH31M0HfyB7Wjttl6QQudyBEq5x9s1Yg';
-  const url = `https://www.googleapis.com/youtube/v3/search?key=${API_KEY}&part=snippet&type=video&maxResults=${maxResults}&q=${query}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`${res.statusText}`);
-  const data = await res.json();
-  if (!data.items || !data.items.length) return [];
-  return data.items.map(vid => ({
-    id: vid.id.videoId,
-    title: vid.snippet.title,
-    url: `https://www.youtube.com/watch?v=${vid.id.videoId}`,
-    thumbnail: vid.snippet.thumbnails.high.url,
-    channel: vid.snippet.channelTitle,
-    publishedAt: vid.snippet.publishedAt
-  }));
-}
-
 Module({
   command: 'play',
   package: 'downloader',
@@ -69,11 +90,14 @@ Module({ on: 'text' })(async (message) => {
   if (!res.length) return await message.send('_eish_');
   const video = res[0];
   const id = video.id;
+  const thumb = await fetch(video.thumb).then(r => r.buffer());
   await message.send(`\`\`\`Downloading: ${video.title}\`\`\``);
   if (message.body.includes('1')) {
   const p = await DownloadMusic(id);
   if (!fs.existsSync(p)) return await message.send('_eish_');
-  await message.send({ audio: fs.readFileSync(p), mimetype: 'audio/mpeg' });
+  const buffer = await fs.promises.readFile(p);
+  const audio = await AddMp3Meta(buffer, thumb, {title: video.title,artist: video.channel});
+  await message.send({ audio, mimetype: 'audio/mpeg' });
   fs.unlinkSync(p);
   } else if (message.body.includes('2')) {
   const p = await DownloadVideo(id);
@@ -83,8 +107,10 @@ Module({ on: 'text' })(async (message) => {
   } else if (message.body.includes('3')) {
   const p = await DownloadMusic(id);
   if (!fs.existsSync(p)) return await message.send('_eish_');
-  const f = video.title.replace(/[^\w\s]/g, '') + '.mp3';
-  await message.send({ document: fs.readFileSync(p), mimetype: 'audio/mpeg', fileName: f });
+  const buffer = await fs.promises.readFile(p);
+  const document = await AddMp3Meta(buffer, thumb, {title: video.title,artist: video.channel});
+  const fileName = video.title.replace(/[^\w\s]/g, '') + '.mp3';
+  await message.send({ document, mimetype: 'audio/mpeg', fileName });
   fs.unlinkSync(p);
   }
 });
@@ -114,10 +140,12 @@ Module({ on: 'text' })(async (message) => {
   const title = arg[args - 1].split('. ')[1].replace(/\*/g, '').trim();
   const results = await ytApiSearch(title, 1);
   if (!results.length) return await message.send('_rr_');
-  const video = results[0];
+  const video = results[0], id = video.id, thumb = await fetch(video.thumb).then(r => r.buffer());
   await message.send(`\`\`\`Downloading: ${video.title}\`\`\``);
-  const path = await DownloadMusic(video.id);
+  const path = await DownloadMusic(id);
   if (!fs.existsSync(path)) return await message.send('_er_');
-  await message.send({ audio: fs.readFileSync(path), mimetype: 'audio/mpeg' });
+  const buffer = await fs.promises.readFile(path);
+  const audio = await AddMp3Meta(buffer, thumb, { title: video.title, artist: video.channel });
+  await message.send({ audio, mimetype: 'audio/mpeg', contextInfo: { externalAdReply: { title: video.title, body: video.channel, thumbnail: thumb, mediaType: 1, mediaUrl: id, sourceUrl: id, showAdAttribution: false, renderLargerThumbnail: false } } });
   fs.unlinkSync(path);
 });
