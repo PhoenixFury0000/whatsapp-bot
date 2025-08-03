@@ -29,15 +29,32 @@ Module({
 });
 
 
+async function ytApiSearch(query, maxResults = 13) {
+  const API_KEY = 'AIzaSyDLH31M0HfyB7Wjttl6QQudyBEq5x9s1Yg';
+  const url = `https://www.googleapis.com/youtube/v3/search?key=${API_KEY}&part=snippet&type=video&maxResults=${maxResults}&q=${query}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${res.statusText}`);
+  const data = await res.json();
+  if (!data.items || !data.items.length) return [];
+  return data.items.map(vid => ({
+    id: vid.id.videoId,
+    title: vid.snippet.title,
+    url: `https://www.youtube.com/watch?v=${vid.id.videoId}`,
+    thumbnail: vid.snippet.thumbnails.high.url,
+    channel: vid.snippet.channelTitle,
+    publishedAt: vid.snippet.publishedAt
+  }));
+}
+
 Module({
   command: 'play',
   package: 'downloader',
   description: 'YouTube video player'
 })(async (message, match) => {
   if (!match) return await message.send('_Give a *query* to play the song or video_');
-  const res = await yts(match);
-  if (!res.videos.length) return await message.send('_eish_');
-  const video = res.videos[0];
+  const res = await ytApiSearch(match, 1);
+  if (!res.length) return await message.send('_eish_');
+  const video = res[0];
   const thumb = await fetch(video.thumbnail).then(r => r.buffer());
   const caption = `*_${video.title}_*\n\n\`\`\`1.⬤\`\`\` *audio*\n\`\`\`2.⬤\`\`\` *video*\n\`\`\`3.⬤\`\`\` *document (mp3)*\n\n_*Send a number as a reply*_`;
   await message.send({ image: thumb, caption });
@@ -48,10 +65,10 @@ Module({ on: 'text' })(async (message) => {
   const body = message.quoted.body || message.quoted.msg?.text || message.quoted.msg?.caption || '';
   if (!body.includes('⬤')) return;
   const query = body.split('\n')[0].replace(/[*_]/g, '').trim();
-  const res = await yts(query);
-  if (!res.videos.length) return await message.send('_eish_');
-  const video = res.videos[0];
-  const id = video.url.split("v=")[1]?.split("&")[0] || video.url.split("/").pop();
+  const res = await ytApiSearch(query, 1);
+  if (!res.length) return await message.send('_eish_');
+  const video = res[0];
+  const id = video.id;
   await message.send(`\`\`\`Downloading: ${video.title}\`\`\``);
   if (message.body.includes('1')) {
   const p = await DownloadMusic(id);
