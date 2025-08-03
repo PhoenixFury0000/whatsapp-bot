@@ -52,8 +52,7 @@ Module({
   const body =
     message.quoted.body ||
     message.quoted.msg?.text ||
-    message.quoted.msg?.caption ||
-    '';
+    message.quoted.msg?.caption || '';
 
   if (!body.includes('⬢')) return;
 
@@ -65,17 +64,17 @@ Module({
   try {
     if (message.body.includes('1')) {
       const path = await DownloadMusic(video.url);
-      if (!fs.existsSync(path)) return await message.send('_Audio file not found_');
-      const buffer = await fs.promises.readFile(path);
-      await message.send({ audio: buffer, mimetype: 'audio/mpeg' });
+      const audio = fs.readFileSync(path);
+      await message.send({ audio, mimetype: 'audio/mpeg' });
+
     } else if (message.body.includes('2')) {
       const path = await DownloadVideo(video.url);
-      if (!fs.existsSync(path)) return await message.send('_Video file not found_');
-      const buffer = await fs.promises.readFile(path);
-      await message.send({ video: buffer, caption: video.title });
+      const videoBuffer = fs.readFileSync(path);
+      await message.send({ video: videoBuffer, caption: video.title });
+      fs.unlinkSync(path)
     }
-  } catch (e) {
-    console.error('Media send error:', e);
+  } catch (err) {
+    console.error('yt-streamer error:', err?.message || err);
     await message.send('_Error sending media_');
   }
 });
