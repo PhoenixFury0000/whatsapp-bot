@@ -1,6 +1,7 @@
 const fs = require('fs');
 const axios = require('axios');
 const yts = require('yt-search');
+const fetch = require('node-fetch');
 const { Module } = require('../lib/plugins');
 const { DownloadMusic,DownloadVideo } = require('yt-streamer');
 
@@ -30,57 +31,43 @@ Module({
 
 Module({
   command: 'play',
-  package: 'download',
+  package: 'downloader',
   description: 'YouTube video player'
 })(async (message, match) => {
   if (!match) return await message.send('_Give a *query* to play the song or video_');
-
   const res = await yts(match);
-  if (!res.videos.length) return await message.send('_No results found_');
-
+  if (!res.videos.length) return await message.send('_eish_');
   const video = res.videos[0];
-  const caption = `*_${video.title}_*\n\n\`\`\`1.⬢\`\`\` *audio*\n\`\`\`2.⬢\`\`\` *video*\n\n_*Send a number as a reply to download*_`;
-
-  await message.send({ text: caption });
+  const thumb = await fetch(video.thumbnail).then(r => r.buffer());
+  const caption = `*_${video.title}_*\n\n\`\`\`1.⬤\`\`\` *audio*\n\`\`\`2.⬤\`\`\` *video*\n\`\`\`3.⬤\`\`\` *document (mp3)*\n\n_*Send a number as a reply*_`;
+  await message.send({ image: thumb, caption });
 });
 
-Module({
-  on: 'text'
-})(async (message) => {
+Module({ on: 'text' })(async (message) => {
   if (!message.quoted) return;
-
-  const body =
-    message.quoted.body ||
-    message.quoted.msg?.text ||
-    message.quoted.msg?.caption || '';
-
-  if (!body.includes('⬢')) return;
-
+  const body = message.quoted.body || message.quoted.msg?.text || message.quoted.msg?.caption || '';
+  if (!body.includes('⬤')) return;
   const query = body.split('\n')[0].replace(/[*_]/g, '').trim();
-  const res = await require('yt-search')(query);
-  if (!res.videos.length) return await message.send('_No results found_');
+  const res = await yts(query);
+  if (!res.videos.length) return await message.send('_eish_');
   const video = res.videos[0];
-
-  try {
-    const id = video.url.split("v=")[1]?.split("&")[0] || video.url.split("/").pop();
-
-    if (message.body.includes('1')) {
-      const path = await DownloadMusic(id);
-      if (!path || typeof path !== 'string' || path === '1') return await message.send('_Failed to download audio_');
-      const audio = fs.readFileSync(path);
-      await message.send({ audio, mimetype: 'audio/mpeg' });
-      fs.unlinkSync(path);
-
-    } else if (message.body.includes('2')) {
-      const path = await DownloadVideo(id);
-      if (!path || typeof path !== 'string' || path === '1') return await message.send('_Failed to download video_');
-      const videoBuffer = fs.readFileSync(path);
-      await message.send({ video: videoBuffer, caption: video.title });
-      fs.unlinkSync(path);
-    }
-
-  } catch (e) {
-    console.error('yt-streamer error:', e?.message || e);
-    await message.send('_Error sending media_');
+  const id = video.url.split("v=")[1]?.split("&")[0] || video.url.split("/").pop();
+  await message.send(`\`\`\`Downloading: ${video.title}\`\`\``);
+  if (message.body.includes('1')) {
+  const p = await DownloadMusic(id);
+  if (!fs.existsSync(p)) return await message.send('_eish_');
+  await message.send({ audio: fs.readFileSync(p), mimetype: 'audio/mpeg' });
+  fs.unlinkSync(p);
+  } else if (message.body.includes('2')) {
+  const p = await DownloadVideo(id);
+  if (!fs.existsSync(p)) return await message.send('_eish_');
+  await message.send({ video: fs.readFileSync(p), caption: video.title });
+  fs.unlinkSync(p);
+  } else if (message.body.includes('3')) {
+  const p = await DownloadMusic(id);
+  if (!fs.existsSync(p)) return await message.send('_eish_');
+  const f = video.title.replace(/[^\w\s]/g, '') + '.mp3';
+  await message.send({ document: fs.readFileSync(p), mimetype: 'audio/mpeg', fileName: f });
+  fs.unlinkSync(p);
   }
 });
