@@ -1,28 +1,21 @@
+const os = require('os');
 const { Module, commands } = require('../lib/plugins');
 const { getTheme } = require('../Themes/themes');
 const config = require('../config');
 const TextStyles = require('../lib/textfonts');
 
-
 Module({
   command: 'menu',
   package: 'general',
-  description: 'Show all commands',
-})(async (message) => {
+  description: 'Show all commands or a specific package',
+})(async (message, match) => {
   const styles = new TextStyles();
   const theme = getTheme();
   const star = '⛥';
+  const hostname = os.hostname();
   const time = new Date().toLocaleTimeString('en-ZA', { timeZone: 'Africa/Johannesburg' });
   const mode = config.WORK_TYPE || process.env.WORK_TYPE;
   const ramUsedMB = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
-  let _cmd_st = `╭──╼「 *${styles.toSmallCaps(theme.botName)}* 」\n`;
-  _cmd_st += `┃ ${styles.toSmallCaps(star)} User: ${styles.toSmallCaps(message.pushName)}\n`;
-  _cmd_st += `┃ ${styles.toSmallCaps(star)} Prefix: ${config.prefix}\n`;
-  _cmd_st += `┃ ${styles.toSmallCaps(star)} Time: ${styles.toSmallCaps(time)}\n`;
-  _cmd_st += `┃ ${styles.toSmallCaps(star)} Mode: ${styles.toSmallCaps(mode)}\n`;
-  _cmd_st += `┃ ${styles.toSmallCaps(star)} Ram: ${ramUsedMB} MB\n`;
-  _cmd_st += `╰──────────╼\n\n`;
-
   const grouped = commands
     .filter(cmd => cmd.command && cmd.command !== 'undefined')
     .reduce((acc, cmd) => {
@@ -32,19 +25,46 @@ Module({
     }, {});
 
   const categories = Object.keys(grouped).sort();
-
-  for (const cat of categories) {
-    _cmd_st += `╭───╼「 *${styles.toSmallCaps(cat.toUpperCase())}* 」 \n`;
-    grouped[cat]
+  let _cmd_st = '';
+  if (match && grouped[match.toLowerCase()]) {
+    const pack = match.toLowerCase();
+    _cmd_st += `╭───╼「 *${styles.toSmallCaps(pack.toUpperCase())}* 」\n`;
+    grouped[pack]
       .sort((a, b) => a.localeCompare(b))
-      .forEach(cmd => {
-        _cmd_st += `┃ ${styles.toSmallCaps(cmd)}\n`;
+      .forEach(cmdName => {
+        _cmd_st += `┃ ${styles.toSmallCaps(cmdName + ' [beta]')}\n`;
       });
     _cmd_st += `╰──────────╼\n`;
+  } else {
+    _cmd_st += `╭──╼「 *${styles.toSmallCaps(theme.botName)}* 」\n`;
+    _cmd_st += `┃ ${styles.toSmallCaps(star)} Host: ${styles.toSmallCaps(hostname)}\n`;
+    _cmd_st += `┃ ${styles.toSmallCaps(star)} User: ${styles.toSmallCaps(message.pushName)}\n`;
+    _cmd_st += `┃ ${styles.toSmallCaps(star)} Prefix: ${config.prefix}\n`;
+    _cmd_st += `┃ ${styles.toSmallCaps(star)} Time: ${styles.toSmallCaps(time)}\n`;
+    _cmd_st += `┃ ${styles.toSmallCaps(star)} Mode: ${styles.toSmallCaps(mode)}\n`;
+    _cmd_st += `┃ ${styles.toSmallCaps(star)} Ram: ${ramUsedMB} MB\n`;
+    _cmd_st += `╰──────────╼\n\n`;
+
+    if (match && !grouped[match.toLowerCase()]) {
+      _cmd_st += `_not found:${match}_\n\n`;
+      _cmd_st += `packages:\n`;
+      categories.forEach(cat => {
+        _cmd_st += `- ${cat}\n`;
+      });
+    } else {
+      for (const cat of categories) {
+        _cmd_st += `╭───╼「 *${styles.toSmallCaps(cat.toUpperCase())}* 」\n`;
+        grouped[cat]
+          .sort((a, b) => a.localeCompare(b))
+          .forEach(cmdName => {
+            _cmd_st += `┃ ${styles.toSmallCaps(cmdName + ' [beta]')}\n`;
+          });
+        _cmd_st += `╰──────────╼\n`;
+      }
+    }
   }
 
   _cmd_st += `\n${theme.other?.footer}`;
-
   if (theme.image) {
     await message.send(
       { image: { url: theme.image }, caption: _cmd_st },
