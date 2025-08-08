@@ -1,20 +1,18 @@
 const {Module} = require('../lib/plugins');
-const axios = require('axios');
+const axios = require("axios");
 
 Module({
-  command: 'lyrics',
-  package: 'info',
-  description: 'Fetch song lyrics'
+  command: "lyrics",
+  package: "info",
+  description: "Get song lyrics"
 })(async (message, match) => {
-  if (!match) return message.send('usage: .lyrics <song> <artist>');
-  let [title, ...artistArr] = match.split(' ').reverse();
-  let artist = artistArr.reverse().join(' ');
-  if (!artist) return message.send('_Please include both song and artist_');
-  let url = `https://api.lyrics.ovh/v1/${artist}/${title}`;
-  let res = await axios.get(url);
-  let lyrics = res.data.lyrics;
-  let parts = lyrics.match(/(.|[\r\n]){1,4000}/g) || [];
-  for (let i = 0; i < parts.length; i++) {
-  await message.send(`🎵 *${title} - ${artist}*${parts.length > 1 ? ` (Part ${i + 1})` : ''}\n\n${parts[i]}`);
-  }
+  if (!match) return await message.send("_Give me a song title eg Sad by xxxtentacion_");
+  const url = `https://lrclib.net/api/search?q=${match}`;
+  const headers = {"User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36",Referer: "https://lrclib.net"};
+  const { data } = await axios.get(url, { headers });
+  if (!data.length) return await message.send("_no lyric_");
+  const r = data[0];
+  const text = `🎵 *${r.trackName}* by *${r.artistName}*\n\n${r.plainLyrics || "_nothin_"}`;
+  await message.send({image: { url: "https://files.catbox.moe/6jx2fn.jpg" },caption: text.length > 4000 ? text.slice(0, 4000) + "\n\n_Lyrics truncated..._" : text
+  });
 });
