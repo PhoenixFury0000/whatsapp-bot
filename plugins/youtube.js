@@ -6,6 +6,39 @@ const { Module } = require('../lib/plugins');
 const { DownloadMusic,DownloadVideo } = require('yt-streamer');
 const AddMp3Meta = require('../lib/Class/metadata');
 
+const x = 'AIzaSyDLH31M0HfyB7Wjttl6QQudyBEq5x9s1Yg';
+async function ytSearch(query, max = 5) {
+  const url = `https://www.googleapis.com/youtube/v3/search?key=${x}&part=snippet&type=video&maxResults=${max}&q=${query}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(res.statusText);
+  const data = await res.json();
+  if (!data.items || !data.items.length) return [];
+  return data.items.map(vid => ({
+    id: vid.id.videoId,
+    title: vid.snippet.title,
+    url: `https://www.youtube.com/watch?v=${vid.id.videoId}`,
+    thumbnail: vid.snippet.thumbnails.high.url,
+    channel: vid.snippet.channelTitle,
+    publishedAt: vid.snippet.publishedAt
+  }));
+}
+
+Module({
+  command: 'yts',
+  package: 'search',
+  description: 'Search YouTube videos'
+})(async (message, match) => {
+  if (!match) return await message.send('Please provide a search query');
+  const query = match.trim();
+  const results = await ytSearch(query, 5);
+  if (!results.length) return await message.send('eish');
+  for (const [i, v] of results.entries()) {
+    const date = new Date(v.publishedAt).toISOString().split('T')[0];
+    const caption = `⬢ ${i + 1}. ${v.title}\n👤 ${v.channel}\n📅 ${date}\n🔗 ${v.url}`;
+    await message.send({ image: { url: v.thumbnail }, caption });
+  }
+});
+
 async function ytApiSearch(query, maxResults = 13) {
   const API_KEY = 'AIzaSyDLH31M0HfyB7Wjttl6QQudyBEq5x9s1Yg';
   const url = `https://www.googleapis.com/youtube/v3/search?key=${API_KEY}&part=snippet&type=video&maxResults=${maxResults}&q=${query}`;
