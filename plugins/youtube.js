@@ -7,7 +7,7 @@ const { DownloadMusic,DownloadVideo } = require('yt-streamer');
 const AddMp3Meta = require('../lib/Class/metadata');
 
 const x = 'AIzaSyDLH31M0HfyB7Wjttl6QQudyBEq5x9s1Yg';
-async function ytSearch(query, max = 5) {
+async function ytSearch(query, max = 10) {
   const url = `https://www.googleapis.com/youtube/v3/search?key=${x}&part=snippet&type=video&maxResults=${max}&q=${query}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(res.statusText);
@@ -30,13 +30,18 @@ Module({
 })(async (message, match) => {
   if (!match) return await message.send('Please provide a search query');
   const query = match.trim();
-  const results = await ytSearch(query, 5);
-  if (!results.length) return await message.send('eish');
-  for (const [i, v] of results.entries()) {
+  const results = await ytSearch(query, 10);
+  if (!results.length) return await message.send('err');
+  let reply = `*YouTube results:*"${query}":\n\n`;
+  results.forEach((v, i) => {
     const date = new Date(v.publishedAt).toISOString().split('T')[0];
-    const caption = `⬢ ${i + 1}. ${v.title}\n👤 ${v.channel}\n📅 ${date}\n🔗 ${v.url}`;
-    await message.send({ image: { url: v.thumbnail }, caption });
-  }
+    reply += `⬢ ${i + 1}. ${v.title}\n   Channel: ${v.channel}\n   Published: ${date}\n   Link: ${v.url}\n\n`;
+  });
+
+  await message.send({
+    image: { url: results[0].thumbnail },
+    caption: reply
+  });
 });
 
 async function ytApiSearch(query, maxResults = 13) {
