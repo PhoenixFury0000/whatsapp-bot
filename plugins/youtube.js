@@ -3,6 +3,7 @@ const axios = require('axios');
 const yts = require('yt-search');
 const fetch = require('node-fetch');
 const { Module } = require('../lib/plugins');
+const ytStreamer = require("../lib/ytdl");
 const { DownloadMusic,DownloadVideo } = require('yt-streamer');
 const AddMp3Meta = require('../lib/Class/metadata');
 
@@ -61,58 +62,68 @@ async function ytApiSearch(query, maxResults = 13) {
   }));
 }
   
-Module({  
-  command: 'song',  
-  package: 'downloader',  
-  description: 'Download YouTube MP3'  
-})(async (message, match) => {  
-  if (!match) return await message.send('_Give a YouTube query or url_');  
-  let id, video;  
-  const regex = /(?:youtube\.com\/.*v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;  
-  const found = match.match(regex);  
-  if (found) id = found[1], video = {id,title:`https://youtu.be/${id}`,channel:'YouTube',thumb:`https://i.ytimg.com/vi/${id}/hqdefault.jpg`};  
-  else { const results = await ytApiSearch(match,1);  
-  if (!results.length) return await message.send('_eish_');  
-  video = results[0]; id = video.id; }  
-  const title = video.title.replace(/[^\w\s]/g,'')+'.mp3';  
-  const img = video.thumb && video.thumb.startsWith('http') ? video.thumb : `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;  
-  await message.send(`\`\`\`Downloading: ${video.title}\`\`\``);  
-  let buffer;  
-  try { const { YouTubeDL } = require('./bin/trash');  
-  const info = await YouTubeDL(`https://youtube.com/watch?v=${id}`);  
-  if (!info || !info.url) throw 'no url';  
-  const res = await axios.get(info.url, {responseType:'arraybuffer'});  
-  buffer = Buffer.from(res.data);  
-  } catch { const file = await DownloadMusic(id);  
-  if (!fs.existsSync(file)) return await message.send('_ehe_');  
-  buffer = await fs.promises.readFile(file);  
-  fs.unlinkSync(file);}  
-  const thumb = await fetch(img).then(r => r.buffer());  
-  const doc = await AddMp3Meta(buffer, thumb, {title:video.title,artist:video.channel});  
-  await message.send({document:doc,mimetype:'audio/mpeg',fileName:title});  
+Module({
+  command: 'song',
+  package: 'downloader',
+  description: 'Download YouTube MP3'
+})(async (message, match) => {
+  if (!match) return await message.send('_Give a query or url_');
+  let id, video;
+  const regex = /(?:youtube\.com\/.*v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  const found = match.match(regex);
+  if (found) {
+  id = found[1];
+  const results = await ytApiSearch(id, 1, true);
+  if (!results.length) return await message.send('_eish_');
+  video = results[0];
+  } else {
+  const results = await ytApiSearch(match, 1);
+  if (!results.length) return await message.send('_eosh_');
+  video = results[0];
+  id = video.id; }
+  const title = video.title.replace(/[^\w\s]/g, '') + '.mp3';
+  const img = video.thumb && video.thumb.startsWith('http') ? video.thumb : `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+  await message.send(`\`\`\`Downloading: ${video.title}\`\`\``);
+  try { const links = await ytStreamer(`https://www.youtube.com/watch?v=${id}`);
+  if (!links || !links.audio) return await message.send('_err_');
+  const res = await axios.get(links.audio, { responseType: 'arraybuffer' });
+  const buffer = Buffer.from(res.data);
+  const thumb = await fetch(img).then(r => r.buffer());
+  const doc = await AddMp3Meta(buffer, thumb, { title: video.title, artist: video.channel });
+  await message.send({ document: doc, mimetype: 'audio/mpeg', fileName: title });
+  } catch {}
 });
 
 Module({
   command: 'ytmp4',
   package: 'downloader',
-  description: 'Download YouTube videos'
+  description: 'Download YouTube MP4'
 })(async (message, match) => {
-  let q = match;
-  if (!q) return await message.send('_Please provide a yt link or search query_');
-  let u = q;
-  if (!q.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//)) {
-  const s = await yts(q);
-  if (!s || !s.videos.length) return await message.send('_not_found_');
-  u = s.videos[0].url; }
-  const id = u.split("v=")[1]?.split("&")[0] || u.split("/").pop();
-  const wait = await message.send('_Downloading video..._');
-  const p = await DownloadVideo(id);
-  const v = fs.readFileSync(p);
-  const stat = fs.statSync(p);
-  const mb = (stat.size / 1024 / 1024).toFixed(2);
-  const title = p.split('/').pop().replace(/\.mp4$/, '');
-  await message.send({video: v,mimetype: 'video/mp4',fileName: `${title}.mp4`,caption: `*${title}*\n*${mb} MB*`});
-  fs.unlinkSync(p);
+  if (!match) return await message.send('_Give a query or url_');
+  let id, video;
+  const regex = /(?:youtube\.com\/.*v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  const found = match.match(regex);
+  if (found) {
+  id = found[1];
+  const results = await ytApiSearch(id, 1, true);
+  if (!results.length) return await message.send('_eish_');
+  video = results[0];
+  } else {
+  const results = await ytApiSearch(match, 1);
+  if (!results.length) return await message.send('_eish_');
+  video = results[0];
+  id = video.id; }
+  await message.send(`\`\`\`Downloading: ${video.title}\`\`\``);
+  try { const links = await ytStreamer(`https://www.youtube.com/watch?v=${id}`);
+  if (!links || !links.video) return await message.send('_nothin_');
+  const qInfo = (links.qualities || []).find(q => q.key === links.videoKey) || {};
+  const quality = qInfo.quality;
+  const size = qInfo.size;
+  const caption = `*Title:* ${video.title}\n*Quality:* ${quality}\n*Size:* ${size}`;
+  const res = await axios.get(links.video, { responseType: 'arraybuffer' });
+  const buffer = Buffer.from(res.data);
+  await message.send({video: buffer,mimetype: 'video/mp4',fileName: `${video.title}.mp4`,caption});
+  } catch {}
 });
 
 Module({
