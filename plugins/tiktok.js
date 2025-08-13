@@ -1,33 +1,31 @@
 const { Module } = require('../lib/plugins');
-const TikTok = require('../lib/Class/tiktok');
-const UrlUtil = require('../lib/UrlUtil');
+const { TikTokDL } = require('yt-streamer');
 
 Module({
-  command: 'tiktok',
-  package: 'downloader',
-  description: 'Download tiktok videos'
+    command: 'tiktok',
+    package: 'downloader',
+    description: 'Download TikTok videos',
 })(async (message, match) => {
-  if (!match) return await message.send('_Please provide a tiktok url_');
-  if (!match.includes('tiktok.com') && !match.includes('vm.tiktok.com')) {
-  return await message.send('_Please provide a valid tiktok url_'); }
-  const tt = new TikTok();
-  const result = await tt.download(match);
-  if (result.status !== 200) return await message.send(`_${result.message || result.error}_`);
-  const videoData = result.data;
-  await message.send({video: { url: videoData.hdPlayUrl || videoData.playUrl }, caption: `*Title:* ${videoData.title}\n*Author:* ${videoData.nickname}`
-  });  
+    if (!match || !match[1]) return message.send('Please provide a tiktok url');
+    const vi = match[1];
+    const data = await TikTokDL(vi);
+    if (!data || !data.url) return message.send('err');
+    const caption = `${data.title}\n*Author:* ${data.author}`;
+    await message.send({video: { url: data.url },caption: caption
+    });
 });
-    
+
+
 Module({
-  on: 'text',
+    on: 'text'
 })(async (message) => {
-  const urls = UrlUtil.extract(message.body);
-  const url = urls.find(u => u.includes('tiktok.com') || u.includes('vm.tiktok.com'));
-  if (!url) return;
-  const tt = new TikTok();
-  const result = await tt.download(url);
-  if (result.status !== 200) return await message.send(`_${result.message || result.error}_`);
-  const video = result.data;
-  await message.send({video: { url: video.hdPlayUrl || video.playUrl }, caption: `*Title:* ${video.title}\n*Author:* ${video.nickname}`
-  });
+    if (!message.body) return;
+    const match = message.body.match(/https?:\/\/(?:www\.)?tiktok\.com\/[^\s]+/);
+    if (match) { const vi = match[0];
+        const data = await TikTokDL(vi);
+        if (data && data.url) {
+          const caption = `${data.title}\n*Author:* ${data.author}`;
+           await message.send({video: { url: data.url },caption: caption });
+        }
+    }
 });
