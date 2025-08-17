@@ -14,7 +14,7 @@ Module({
   else await message.send('err')
 })
 
-Module({on:'text'})(async message=>{
+Module({on:'text'})(async(message)=>{
   const b=message.body||''
   if(!b.includes('instagram.com')) return
   const d=await instaSave(b)
