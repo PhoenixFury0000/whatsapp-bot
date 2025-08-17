@@ -1,39 +1,25 @@
-const Instagram = require('../lib/Class/instagram');
 const { Module } = require('../lib/plugins');
-const UrlUtil = require('../lib/UrlUtil');
+const instaSave=require('./bin/instagram')
 
 Module({
-  command: 'insta',
-  package: 'downloader',
-  description: 'Download Instagram photo/video',
-})(async (message, match) => {
-  if (!match) return await message.send('ig url required');
-  const ig = new Instagram();
-  const res = await ig.get(match);
-  if (!res.files.length || res.files[0].url === 'not found') return await message.send('err');
-  for (const file of res.files) {
-    if (file.type === 'mp4') {
-      await message.send({ video: { url: file.url } }, { quoted: message });
-    } else {
-      await message.send({ image: { url: file.url } }, { quoted: message });
-    }
-  }
-});
+  command:'insta',
+  package:'downloader',
+  description:'Download Instagram photo/video',
+})(async(message,match)=>{
+  if(!match) return await message.send('ig url required')
+  const d=await instaSave(match)
+  const c=(d.description?`📝 ${d.description}\n`:``)+(d.profileName?`👤 ${d.profileName}\n`:``)+(d.likes?`❤️ ${d.likes}\n`:``)+(d.comments?`💬 ${d.comments}\n`:``)+(d.timeAgo?`⏰ ${d.timeAgo}`:``)
+  if(d.MP4) await message.send({video:{url:d.MP4},caption:c})
+  else if(d.JPEG) await message.send({image:{url:d.JPEG},caption:c})
+  else await message.send('err')
+})
 
-Module({
-  on: 'text'
-})(async (message) => {
-  const urls = UrlUtil.extract(message.body);
-  const ig = urls.find(url => url.includes('instagram.com'));
-  if (!ig) return;
-  const insta = new Instagram();
-  const res = await insta.get(ig);
-  if (!res.files.length || res.files[0].url === 'not found') return await message.send('err');
-  for (const file of res.files) {
-    if (file.type === 'mp4') {
-      await message.send({ video: { url: file.url } }, { quoted: message });
-    } else {
-      await message.send({ image: { url: file.url } }, { quoted: message });
-    }
-  }
-});
+Module({on:'text'})(async message=>{
+  const b=message.body||''
+  if(!b.includes('instagram.com')) return
+  const d=await instaSave(b)
+  const c=(d.description?`📝 ${d.description}\n`:``)+(d.profileName?`👤 ${d.profileName}\n`:``)+(d.likes?`❤️ ${d.likes}\n`:``)+(d.comments?`💬 ${d.comments}\n`:``)+(d.timeAgo?`⏰ ${d.timeAgo}`:``)
+  if(d.MP4) await message.send({video:{url:d.MP4},caption:c})
+  else if(d.JPEG) await message.send({image:{url:d.JPEG},caption:c})
+  else await message.send('err')
+})
