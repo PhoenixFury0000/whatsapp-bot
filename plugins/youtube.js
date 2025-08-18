@@ -85,32 +85,55 @@ Module({
   description: 'Download YouTube MP4'
 })(async (message, match) => {
   if (!match) return await message.send('_Give a query or url_');
-  let id, video;
+  let url = match.trim();
   const regex = /(?:youtube\.com\/.*v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-  const found = match.match(regex);
-  if (found) {
-  id = found[1];
-  const results = await ytApiSearch(id, 1, true);
-  if (!results.length) return await message.send('_eish_');
-  video = results[0];
-  } else {
-  const results = await ytApiSearch(match, 1);
-  if (!results.length) return await message.send('_eish_');
-  video = results[0];
-  id = video.id; }
-  await message.send(`\`\`\`Downloading: ${video.title}\`\`\``);
-  try { const links = await ytStreamer(`https://www.youtube.com/watch?v=${id}`);
-  if (!links || !links.video) return await message.send('_nothin_');
-  const qInfo = (links.qualities || []).find(q => q.key === links.videoKey) || {};
-  const quality = qInfo.quality;
-  const size = qInfo.size;
-  const caption = `*Title:* ${video.title}\n*Quality:* ${quality}\n*Size:* ${size}`;
-  const res = await axios.get(links.video, { responseType: 'arraybuffer' });
-  const buffer = Buffer.from(res.data);
-  await message.send({video: buffer,mimetype: 'video/mp4',fileName: `${video.title}.mp4`,caption});
-  } catch {}
+  const id = url.match(regex)?.[1];
+  let title = 'video';
+  if (!id) { const res = await ytApiSearch(url, 1);
+  if (!res.length) return await message.send('_eish_');
+  url = res[0].url;
+  title = res[0].title;
+  } else { const res = await ytApiSearch(url, 1);
+  if (res.length) title = res[0].title;}
+  const quality = '720p';
+  const apiRes = await axios.get(`https://garfield-apis.onrender.com/youtube-video?url=${url}&quality=720`);
+  const buf = await axios.get(apiRes.data.video.downloadUrl, { responseType: 'arraybuffer' });
+  await message.send({ video: Buffer.from(buf.data), caption: `*Title:* ${title}\n*Quality:* ${quality}` });
 });
 
+Module({
+  command: 'yta',
+  package: 'downloader',
+  description: 'Download YouTube Audio'
+})(async (message, match) => {
+  if (!match) return await message.send('_Give a query or url_');
+  let url = match.trim();
+  const regex = /(?:youtube\.com\/.*v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  const id = url.match(regex)?.[1];
+  if (!id) {const res = await ytApiSearch(url, 1);
+  if (!res.length) return await message.send('_eish_');
+  url = res[0].url; }
+  const apiRes = await axios.get(`https://garfield-apis.onrender.com/youtube-audio?url=${url}`);
+  const buf = await axios.get(apiRes.data.audio.downloadUrl, { responseType: 'arraybuffer' });
+  await message.send({ audio: Buffer.from(buf.data), mimetype: 'audio/mpeg' });
+});
+
+Module({
+  command: 'ytmp3',
+  package: 'downloader',
+  description: 'Download YouTube MP3'
+})(async (message, match) => {
+  if (!match) return await message.send('_Give a query or url_');
+  let url = match.trim();
+  const regex = /(?:youtube\.com\/.*v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  const id = url.match(regex)?.[1];
+  if (!id) { const res = await ytApiSearch(url, 1);
+  if (!res.length) return await message.send('_eish_');
+  url = res[0].url; }
+  const apiRes = await axios.get(`https://garfield-apis.onrender.com/youtube-audio?url=${url}`);
+  const buf = await axios.get(apiRes.data.audio.downloadUrl, { responseType: 'arraybuffer' });
+  await message.send({ audio: Buffer.from(buf.data), mimetype: 'audio/mpeg' });
+});
 Module({
   command: 'play',
   package: 'downloader',
@@ -133,48 +156,23 @@ Module({ on: 'text' })(async (message) => {
   const res = await ytApiSearch(query, 1);
   if (!res.length) return await message.send('_eish_');
   const video = res[0], id = video.id;
-  const img = video.thumb && video.thumb.startsWith('http') ? video.thumb : `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
-  const thumb = await fetch(img).then(r => r.buffer());
   const choice = message.body.trim();
   if (!['1','2','3'].includes(choice)) return;
-  await message.send(`\`\`\`Downloading: ${video.title}\`\`\``);
+  await message.send(`\`\`\`Downloading: ${video.title}\`\`\``)
+  if (choice === '1' || choice === '3') {
+  const apiRes = await axios.get(`https://garfield-apis.onrender.com/youtube-audio?url=https://www.youtube.com/watch?v=${id}`);
+  const buf = await axios.get(apiRes.data.audio.downloadUrl, { responseType: 'arraybuffer' });
   if (choice === '1') {
-  let buffer;
-  try { const { YouTubeDL } = require('./bin/trash');
-  const info = await YouTubeDL(`https://youtube.com/watch?v=${id}`);
-  if (!info || !info.url) throw 'fail';
-  const res = await axios.get(info.url, { responseType: 'arraybuffer' });
-  buffer = Buffer.from(res.data);
-  } catch {
-  const file = await DownloadMusic(id);
-  if (!fs.existsSync(file)) return await message.send('_eish_');
-  buffer = await fs.promises.readFile(file);
-  fs.unlinkSync(file); }
-  const audio = await AddMp3Meta(buffer, thumb, {title: video.title, artist: video.channel});
-  await message.send({ audio, mimetype: 'audio/mpeg' });
-  } else if (choice === '2') {
-  let buffer;
-  const file = await DownloadVideo(id);
-  if (!fs.existsSync(file)) return await message.send('_eish_');
-  buffer = fs.readFileSync(file);
-  fs.unlinkSync(file);
-  await message.send({ video: buffer, caption: video.title });
-  } else if (choice === '3') {
-  let buffer;
-  try { const info = await YouTubeDL(`https://youtube.com/watch?v=${id}`);
-  if (!info || !info.url) throw 'fail';
-  const res = await axios.get(info.url, { responseType: 'arraybuffer' });
-  buffer = Buffer.from(res.data);
-  } catch {
-  const file = await DownloadMusic(id);
-  if (!fs.existsSync(file)) return await message.send('_eish_');
-  buffer = await fs.promises.readFile(file);
-  fs.unlinkSync(file);}
-  const document = await AddMp3Meta(buffer, thumb, {title: video.title, artist: video.channel});
+  await message.send({ audio: Buffer.from(buf.data), mimetype: 'audio/mpeg' });
+  } else {
   const fileName = video.title.replace(/[^\w\s]/g, '') + '.mp3';
-  await message.send({ document, mimetype: 'audio/mpeg', fileName });}
+  await message.send({ document: Buffer.from(buf.data), mimetype: 'audio/mpeg', fileName });
+  }} else if (choice === '2') {
+  const apiRes = await axios.get(`https://garfield-apis.onrender.com/youtube-video?url=https://www.youtube.com/watch?v=${id}&quality=720`);
+  const buf = await axios.get(apiRes.data.video.downloadUrl, { responseType: 'arraybuffer' });
+  await message.send({ video: Buffer.from(buf.data), caption: video.title });
+  }
 });
-
 Module({
   command: 'audio',
   package: 'downloader',
