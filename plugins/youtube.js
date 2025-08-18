@@ -164,7 +164,7 @@ Module({ on: 'text' })(async (message) => {
   const apiRes = await axios.get(`https://garfield-apis.onrender.com/youtube-audio?url=${url}`);
   const buf = await axios.get(apiRes.data.audio.downloadUrl, { responseType: 'arraybuffer' });
   if (choice === '1') await message.send({ audio: Buffer.from(buf.data), mimetype: 'audio/mpeg', contextInfo: { externalAdReply: { title, body: 'Audio', mediaType: 1, thumbnailUrl: thumbUrl, mediaUrl: url, showAdAttribution: falsa, renderLargerThumbnail: false } } });
-  else { const fileName = title.replace(/[^\w\s]/g, '') + '.mp3'; await message.send({ document: Buffer.from(buf.data), mimetype: 'audio/mpeg', fileName, contextInfo: { externalAdReply: { title, body: 'Document', mediaType: 1,thumbnailUrl: thumbUrl, mediaUrl: url, showAdAttribution: false, renderLargerThumbnail: : false } } }); }
+  else { const fileName = title.replace(/[^\w\s]/g, '') + '.mp3'; await message.send({ document: Buffer.from(buf.data), mimetype: 'audio/mpeg', fileName, contextInfo: { externalAdReply: { title, body: 'Document', mediaType: 1,thumbnailUrl: thumbUrl, mediaUrl: url, showAdAttribution: false, renderLargerThumbnail:  false } } }); }
   } else if (choice === '2') {
   const apiRes = await axios.get(`https://garfield-apis.onrender.com/youtube-video?url=${url}&quality=720`);
   const buf = await axios.get(apiRes.data.video.downloadUrl, { responseType: 'arraybuffer' });
