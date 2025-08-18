@@ -84,15 +84,14 @@ Module({
   package: 'downloader',
   description: 'Download YouTube MP4'
 })(async (message, match) => {
-  if (!match) return await message.send('_Give a query or url_');
-  let url = match.trim(), title = 'video';
+  if (!match) return await message.send('_Give a valid YouTube URL_');
+  const url = match.trim();
   const regex = /(?:youtube\.com\/.*v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
   const id = url.match(regex)?.[1];
-  if (!id) { const res = await ytApiSearch(url, 1); if (!res.length) return await message.send('_eish_'); url = res[0].url; title = res[0].title; } 
-  else { const res = await ytApiSearch(id, 1); if (res.length) title = res[0].title; }
+  if (!id) return await message.send('_Invalid YouTube URL_');
   const apiRes = await axios.get(`https://garfield-apis.onrender.com/youtube-video?url=${url}&quality=720`);
-  const buf = await axios.get(apiRes.data.video.downloadUrl, { responseType: 'arraybuffer' });
-  await message.send({ video: Buffer.from(buf.data), caption: `*Title:* ${title}\n*Quality:* 720p` });
+  const buf = await axios.get(apiRes.data.video['720'].downloadUrl, { responseType: 'arraybuffer' });
+  await message.send({ video: Buffer.from(buf.data), caption: `*Title:* ${id}\n*Quality:* 720p` });
 });
 
 Module({
