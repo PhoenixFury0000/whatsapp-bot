@@ -85,20 +85,14 @@ Module({
   description: 'Download YouTube MP4'
 })(async (message, match) => {
   if (!match) return await message.send('_Give a query or url_');
-  let url = match.trim();
+  let url = match.trim(), title = 'video';
   const regex = /(?:youtube\.com\/.*v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
   const id = url.match(regex)?.[1];
-  let title = 'video';
-  if (!id) { const res = await ytApiSearch(url, 1);
-  if (!res.length) return await message.send('_eish_');
-  url = res[0].url;
-  title = res[0].title;
-  } else { const res = await ytApiSearch(url, 1);
-  if (res.length) title = res[0].title;}
-  const quality = '720p';
+  if (!id) { const res = await ytApiSearch(url, 1); if (!res.length) return await message.send('_eish_'); url = res[0].url; title = res[0].title; } 
+  else { const res = await ytApiSearch(id, 1); if (res.length) title = res[0].title; }
   const apiRes = await axios.get(`https://garfield-apis.onrender.com/youtube-video?url=${url}&quality=720`);
   const buf = await axios.get(apiRes.data.video.downloadUrl, { responseType: 'arraybuffer' });
-  await message.send({ video: Buffer.from(buf.data), caption: `*Title:* ${title}\n*Quality:* ${quality}` });
+  await message.send({ video: Buffer.from(buf.data), caption: `*Title:* ${title}\n*Quality:* 720p` });
 });
 
 Module({
@@ -150,27 +144,31 @@ Module({
 
 Module({ on: 'text' })(async (message) => {
   if (!message.quoted) return;
-  const body = message.quoted.body || message.quoted.msg?.text || message.quoted.msg?.caption || '';
+  let body = message.quoted.body || message.quoted.msg?.text || message.quoted.msg?.caption || '';
   if (!body.includes('⬤')) return;
-  const query = body.split('\n')[0].replace(/[*_]/g, '').trim();
-  const res = await ytApiSearch(query, 1);
+  let url = body.split('\n')[0].replace(/[*_]/g, '').trim();
+  const regex = /(?:youtube\.com\/.*v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  const id = url.match(regex)?.[1];
+  let title = 'video';
+  const res = await ytApiSearch(url, 1);
+  if (!id) {
   if (!res.length) return await message.send('_eish_');
-  const video = res[0], id = video.id;
+  url = res[0].url;
+  title = res[0].title;
+  } else if (res.length) title = res[0].title;
   const choice = message.body.trim();
   if (!['1','2','3'].includes(choice)) return;
-  await message.send(`\`\`\`Downloading: ${video.title}\`\`\``)
+  await message.send(`\`\`\`Downloading: ${title}\`\`\``);
+  const thumbUrl = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
   if (choice === '1' || choice === '3') {
-  const apiRes = await axios.get(`https://garfield-apis.onrender.com/youtube-audio?url=https://www.youtube.com/watch?v=${id}`);
+  const apiRes = await axios.get(`https://garfield-apis.onrender.com/youtube-audio?url=${url}`);
   const buf = await axios.get(apiRes.data.audio.downloadUrl, { responseType: 'arraybuffer' });
-  if (choice === '1') {
-  await message.send({ audio: Buffer.from(buf.data), mimetype: 'audio/mpeg' });
-  } else {
-  const fileName = video.title.replace(/[^\w\s]/g, '') + '.mp3';
-  await message.send({ document: Buffer.from(buf.data), mimetype: 'audio/mpeg', fileName });
-  }} else if (choice === '2') {
-  const apiRes = await axios.get(`https://garfield-apis.onrender.com/youtube-video?url=https://www.youtube.com/watch?v=${id}&quality=720`);
+  if (choice === '1') await message.send({ audio: Buffer.from(buf.data), mimetype: 'audio/mpeg', contextInfo: { externalAdReply: { title, body: 'Audio', mediaType: 1, thumbnailUrl: thumbUrl, mediaUrl: url, showAdAttribution: falsa, renderLargerThumbnail: false } } });
+  else { const fileName = title.replace(/[^\w\s]/g, '') + '.mp3'; await message.send({ document: Buffer.from(buf.data), mimetype: 'audio/mpeg', fileName, contextInfo: { externalAdReply: { title, body: 'Document', mediaType: 1,thumbnailUrl: thumbUrl, mediaUrl: url, showAdAttribution: false, renderLargerThumbnail: : false } } }); }
+  } else if (choice === '2') {
+  const apiRes = await axios.get(`https://garfield-apis.onrender.com/youtube-video?url=${url}&quality=720`);
   const buf = await axios.get(apiRes.data.video.downloadUrl, { responseType: 'arraybuffer' });
-  await message.send({ video: Buffer.from(buf.data), caption: video.title });
+  await message.send({ video: Buffer.from(buf.data), caption: `*Title:* ${title}\n*Quality:* 720p` });
   }
 });
 Module({
