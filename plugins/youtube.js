@@ -63,36 +63,21 @@ async function ytApiSearch(query, maxResults = 13) {
 }
   
 Module({
-  command: 'song',
-  package: 'downloader',
-  description: 'Download YouTube MP3'
-})(async (message, match) => {
-  if (!match) return await message.send('_Give a query or url_');
-  let id, video;
-  const regex = /(?:youtube\.com\/.*v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-  const found = match.match(regex);
-  if (found) {
-  id = found[1];
-  const results = await ytApiSearch(id, 1, true);
-  if (!results.length) return await message.send('_eish_');
-  video = results[0];
-  } else {
-  const results = await ytApiSearch(match, 1);
-  if (!results.length) return await message.send('_eosh_');
-  video = results[0];
-  id = video.id; }
-  const title = video.title.replace(/[^\w\s]/g, '') + '.mp3';
-  const img = video.thumb && video.thumb.startsWith('http') ? video.thumb : `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
-  await message.send(`\`\`\`Downloading: ${video.title}\`\`\``);
-  try { const links = await ytStreamer(`https://www.youtube.com/watch?v=${id}`);
-  if (!links || !links.audio) return await message.send('_err_');
-  const res = await axios.get(links.audio, { responseType: 'arraybuffer' });
-  const buffer = Buffer.from(res.data);
-  const thumb = await fetch(img).then(r => r.buffer());
-  const doc = await AddMp3Meta(buffer, thumb, { title: video.title, artist: video.channel });
-  await message.send({ document: doc, mimetype: 'audio/mpeg', fileName: title });
-  } catch {}
-});
+  command:"song",
+  package:"downloader",
+  description:"Download audio from YouTube"
+})(async(message,match)=>{
+if(!match) return message.send("_need a yt url or song nam_")
+let input=match.trim()
+async function searchYt(q){const key='AIzaSyDLH31M0HfyB7Wjttl6QQudyBEq5x9s1Yg';const res=await fetch(`https://www.googleapis.com/youtube/v3/search?key=${key}&part=snippet&type=video&maxResults=13&q=${q}`);const data=await res.json();if(!data.items||!data.items.length)return[];return data.items.map(v=>({id:v.id.videoId,title:v.snippet.title,url:`https://www.youtube.com/watch?v=${v.id.videoId}`}))}
+async function getTitle(u){let id=u.includes("youtu.be/")?u.split("youtu.be/")[1].split(/[?&]/)[0]:new URL(u).searchParams.get("v");if(!id)return"song";const key='AIzaSyDLH31M0HfyB7Wjttl6QQudyBEq5x9s1Yg';const res=await fetch(`https://www.googleapis.com/youtube/v3/videos?key=${key}&part=snippet&id=${id}`);const data=await res.json();if(!data.items||!data.items.length)return"song";return data.items[0].snippet.title}
+let url=input,title
+if(!/^https?:\/\/(www\.)?youtube\.com\/watch\?v=/.test(input)&&!/^https?:\/\/youtu\.be\//.test(input)){const r=await searchYt(input);if(!r.length)return message.send("err");url=r[0].url;title=r[0].title}else{title=await getTitle(url)}
+await message.send("*Downloading:* "+title)
+const apiRes=await axios.get(`https://garfield-apis.onrender.com/youtube-audio?url=${url}`)
+const buf=await axios.get(apiRes.data.audio.downloadUrl,{responseType:"arraybuffer"})
+await message.send({document:Buffer.from(buf.data),mimetype:"audio/mpeg",fileName:`${title}.mp3`})
+})
 
 Module({
   command: 'ytmp4',
