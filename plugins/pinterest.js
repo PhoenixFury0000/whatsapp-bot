@@ -3,6 +3,23 @@ const cheerio = require('cheerio');
 const { Module } = require('../lib/plugins');
 
 Module({
+  command: "pinterest",
+  type: "search",
+  description: "Search Pinterest images"
+})(async (message, match) => {
+  if (!match) return message.send("_Please provide a search term_")
+  let query = match.trim();
+  let res 
+  res = await axios.get(`https://garfield-apis.onrender.com/search/pinterest?query=${query}`)
+  let data = res.data
+  if (!data.results || data.results.length === 0) return message.send("_err_")
+  let results = data.results.slice(0, 5)
+  for (let url of results) {
+  await message.sendFromUrl(url)
+  }
+})
+
+Module({
   command: 'pint',
   package: 'downloader',
   description: 'Search Pinterest images'
