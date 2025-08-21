@@ -4,7 +4,7 @@ const { Module } = require('../lib/plugins');
 
 Module({
   command: "pinterest",
-  type: "search",
+  package: "search",
   description: "Search Pinterest images"
 })(async (message, match) => {
   if (!match) return message.send("_Please provide a search term_")
