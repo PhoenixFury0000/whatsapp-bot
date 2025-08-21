@@ -3,7 +3,7 @@ const {Module} = require('../lib/plugins');
 
 Module({
   command: "stickersearch",
-  type: "tools",
+  package: "tools",
   description: "Search stickers"
 })(async (message, match) => {
   if (!match) return message.send("_Need a search term_")
