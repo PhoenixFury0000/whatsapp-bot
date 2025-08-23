@@ -30,6 +30,6 @@
 
   ## Keys
 
-  [Scan](https://hastebin-pair.onrender.com)
+  [Scan](https://pair.garfielx.qzz.io/)
 
-  # This bot supports any session id for connection arigato
+  # Arigato session fix
