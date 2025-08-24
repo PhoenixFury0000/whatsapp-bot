@@ -3,19 +3,20 @@ const { Module, commands } = require('../lib/plugins');
 const { getTheme } = require('../Themes/themes');
 const config = require('../config');
 const TextStyles = require('../lib/textfonts');
+const styles = new TextStyles();
+const theme = getTheme();
+const star = '⛥';
 
 Module({
   command: 'menu',
   package: 'general',
   description: 'Show all commands or a specific package',
 })(async (message, match) => {
-  const styles = new TextStyles();
-  const theme = getTheme();
-  const star = '⛥';
   const hostname = os.hostname();
   const time = new Date().toLocaleTimeString('en-ZA', { timeZone: 'Africa/Johannesburg' });
   const mode = config.WORK_TYPE || process.env.WORK_TYPE;
   const ramUsedMB = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
+
   const grouped = commands
     .filter(cmd => cmd.command && cmd.command !== 'undefined')
     .reduce((acc, cmd) => {
@@ -26,13 +27,14 @@ Module({
 
   const categories = Object.keys(grouped).sort();
   let _cmd_st = '';
+
   if (match && grouped[match.toLowerCase()]) {
     const pack = match.toLowerCase();
     _cmd_st += `╭───╼「 *${styles.toSmallCaps(pack.toUpperCase())}* 」\n`;
     grouped[pack]
       .sort((a, b) => a.localeCompare(b))
       .forEach(cmdName => {
-        _cmd_st += `┃ ${styles.toSmallCaps(cmdName + ' [beta]')}\n`;
+        _cmd_st += `┃ ${styles.toSmallCaps(cmdName)}\n`;
       });
     _cmd_st += `╰──────────╼\n`;
   } else {
@@ -46,7 +48,7 @@ Module({
     _cmd_st += `╰──────────╼\n\n`;
 
     if (match && !grouped[match.toLowerCase()]) {
-      _cmd_st += `_not found:${match}_\n\n`;
+      _cmd_st += `_not found: ${match}_\n\n`;
       _cmd_st += `packages:\n`;
       categories.forEach(cat => {
         _cmd_st += `- ${cat}\n`;
@@ -57,7 +59,7 @@ Module({
         grouped[cat]
           .sort((a, b) => a.localeCompare(b))
           .forEach(cmdName => {
-            _cmd_st += `┃ ${styles.toSmallCaps(cmdName + ' [beta]')}\n`;
+            _cmd_st += `┃ ${styles.toSmallCaps(cmdName)}\n`;
           });
         _cmd_st += `╰──────────╼\n`;
       }
@@ -70,5 +72,44 @@ Module({
       { image: { url: theme.image }, caption: _cmd_st },
       { quoted: message }
     );
+  }
+});
+
+Module({
+  command: 'list',
+  package: 'general',
+  description: 'List all available commands',
+})(async (message) => {
+  const aca = commands
+    .filter(cmd => cmd.command && cmd.command !== 'undefined')
+    .map(cmd => cmd.command)
+    .join('\n');
+  await message.send(`*List:*\n${aca}`);
+});
+
+Module({
+  command: 'alive',
+  package: 'general',
+  description: 'Check if bot is alive',
+})(async (message) => {
+  const hostname = os.hostname();
+  const time = new Date().toLocaleTimeString('en-ZA', { timeZone: 'Africa/Johannesburg' });
+  const ramUsedMB = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
+  const uptime = process.uptime();
+  const hours = Math.floor(uptime / 3600);
+  const minutes = Math.floor((uptime % 3600) / 60);
+  const seconds = Math.floor(uptime % 60);
+  const ctx = `
+${theme.botName}* is online
+
+Time: ${time}
+Host: ${hostname}
+RAM Usage: ${ramUsedMB} MB
+Uptime: ${hours}h ${minutes}m ${seconds}s
+`;
+  if (theme.image) {
+    await message.send({ image: { url: theme.image }, caption: ctx });
+  } else {
+    await message.send(ctx);
   }
 });
