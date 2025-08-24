@@ -12,11 +12,9 @@ Module({
   let data = await res.json();
   if (!data.result || !data.result.download || !data.result.download.url) 
   return message.send("_not found_");
-  let apc = data.result.download.url;
+  let url = data.result.download.url;
   let name = data.result.title;
   let size = (parseInt(data.result.download.size) / 1024 / 1024).toFixed(2) + " MB";
-    message.send({
-    document: { url: apc, filename: `${name}.apk` },
-    caption: `⬢ Name: ${name}\n⬢ Size: ${size}`
+  await message.send({document: { url },mimetype: "application/vnd.android.package-archive",fileName: `${name}.apk`,caption: `⬢ Name: ${name}\n⬢ Size: ${size}`
   });
 });
