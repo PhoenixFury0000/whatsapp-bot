@@ -1,21 +1,5 @@
 const { Module } = require('../lib/plugins');
 
-
-Module({
-  command: "setgpp",
-  description: "Set group profile picture (admin only)",
-  package: "group"
-})(async (message) => {
-  if (!message.isGroup) return;
-  if (!message.isAdmin) return;
-  if (!message.isBotAdmin) return message.send("_Bot must be admin_");
-  if (!message.quoted || !/imageMessage/.test(message.quoted.type))
-  return message.send("Reply to an image to set")
-  let buf = await message.quoted.download()
-  await message.setGpPp(buf) 
-  return message.send("_✅ Group profile picture updated_")
-});
-
 Module({
     command: 'add',
     package: 'group',
