@@ -30,21 +30,21 @@ Module({
 
   if (match && grouped[match.toLowerCase()]) {
     const pack = match.toLowerCase();
-    _cmd_st += `╭───╼「 *${styles.toSmallCaps(pack.toUpperCase())}* 」\n`;
+    _cmd_st += `╭───╼「 *${styles.toMonospace(pack.toUpperCase())}* 」\n`;
     grouped[pack]
       .sort((a, b) => a.localeCompare(b))
       .forEach(cmdName => {
-        _cmd_st += `┃ ${styles.toSmallCaps(cmdName)}\n`;
+        _cmd_st += `┃ ${styles.toMonospace(cmdName)}\n`;
       });
     _cmd_st += `╰──────────╼\n`;
   } else {
-    _cmd_st += `╭──╼「 *${styles.toSmallCaps(theme.botName)}* 」\n`;
-    _cmd_st += `┃ ${styles.toSmallCaps(star)} Host: ${styles.toSmallCaps(hostname)}\n`;
-    _cmd_st += `┃ ${styles.toSmallCaps(star)} User: ${styles.toSmallCaps(message.pushName)}\n`;
-    _cmd_st += `┃ ${styles.toSmallCaps(star)} Prefix: ${config.prefix}\n`;
-    _cmd_st += `┃ ${styles.toSmallCaps(star)} Time: ${styles.toSmallCaps(time)}\n`;
-    _cmd_st += `┃ ${styles.toSmallCaps(star)} Mode: ${styles.toSmallCaps(mode)}\n`;
-    _cmd_st += `┃ ${styles.toSmallCaps(star)} Ram: ${ramUsedMB} MB\n`;
+    _cmd_st += `╭──╼「 *${styles.toMonospace(theme.botName)}* 」\n`;
+    _cmd_st += `┃ ${styles.toMonospace(star)} Host: ${styles.toMonospace(hostname)}\n`;
+    _cmd_st += `┃ ${styles.toMonospace(star)} User: ${styles.toMonospace(message.pushName)}\n`;
+    _cmd_st += `┃ ${styles.toMonospace(star)} Prefix: ${config.prefix}\n`;
+    _cmd_st += `┃ ${styles.toMonospace(star)} Time: ${styles.toMonospace(time)}\n`;
+    _cmd_st += `┃ ${styles.toMonospace(star)} Mode: ${styles.toMonospace(mode)}\n`;
+    _cmd_st += `┃ ${styles.toMonospace(star)} Ram: ${ramUsedMB} MB\n`;
     _cmd_st += `╰──────────╼\n\n`;
 
     if (match && !grouped[match.toLowerCase()]) {
@@ -55,11 +55,11 @@ Module({
       });
     } else {
       for (const cat of categories) {
-        _cmd_st += `╭───╼「 *${styles.toSmallCaps(cat.toUpperCase())}* 」\n`;
+        _cmd_st += `╭───╼「 *${styles.toMonospace(cat.toUpperCase())}* 」\n`;
         grouped[cat]
           .sort((a, b) => a.localeCompare(b))
           .forEach(cmdName => {
-            _cmd_st += `┃ ${styles.toSmallCaps(cmdName)}\n`;
+            _cmd_st += `┃ ${styles.toMonospace(cmdName)}\n`;
           });
         _cmd_st += `╰──────────╼\n`;
       }
