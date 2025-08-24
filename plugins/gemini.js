@@ -3,7 +3,7 @@ const axios = require('axios');
 
 Module({
     command: 'gemini',
-    package: 'AI',
+    package: 'ai',
     description: 'Ask Gemini 2.5 with text and optional image'
 })(async (message, match) => {
     const api = 'AIzaSyClFUKysXJj-v4NxGwVeQZN7ygds7dpkcs';
