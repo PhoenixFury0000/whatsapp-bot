@@ -4,7 +4,7 @@ const isTrue = (x) => x === 'true' || x === true;
 module.exports = {
     prefix: process.env.PREFIX || '.',
     owner: process.env.OWNER_NUMBER || '',
-    mods: process.env.MODS || '',
+    sudo: process.env.SUDO || '',
     packname: process.env.PACKNAME || 'ɠαɾϝιҽʅɗ',
     author: process.env.AUTHOR || 'ɳαxσɾ',
     SESSION_ID: process.env.SESSION_ID || '',
