@@ -1,16 +1,16 @@
-const { mods } = require('../config');  
-const {Module} = require('../lib/plugins');  
-const util = require('util');  
-  
+const { Module } = require('../lib/plugins');
+const util = require('util');
+
 Module({
   on: 'text'
 })(async (message) => {
   if (!message.body.startsWith('>')) return;
-  let sender = message.sender.split('@')[0]; 
-  if (!(message.fromMe || mods.includes(sender))) return;
+  let sender = message.sender.split('@')[0];
+  let sudo = process.env.SUDO ? process.env.SUDO.split(',') : [];
+  if (!(message.fromMe || sudo.includes(sender))) return;
   let code = message.body.slice(1).trim();
-  try {let result = await eval(`(async () => { ${code} })()`);
-  if (typeof result !== 'string') result = require('util').inspect(result);
+  try { let result = await eval(`(async () => { ${code} })()`);
+  if (typeof result !== 'string') result = util.inspect(result);
   await message.send(result);
   } catch (e) {
   await message.send(e.message);
