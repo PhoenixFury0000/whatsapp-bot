@@ -1,6 +1,23 @@
 const { Module } = require('../lib/plugins');
 
 Module({
+  command: 'wame',
+  package: 'whatsapp',
+  description: 'number'
+})(async (message, match) => {
+ let num
+ if (message.mention && message.mention[0]) {
+ num = message.mention[0]
+ } else if (message.quoted) {
+ num = message.quoted.participant || message.quoted.sender
+ } else if (match) {
+ num = match
+ } else { num = message.sender }
+ num = num.replace(/[^0-9]/g, '')
+await message.send(`https://wa.me/${num}`)
+})
+
+Module({
   command: 'status',
   package: 'whatsapp',
   description: 'Get WhatsApp profile status'
