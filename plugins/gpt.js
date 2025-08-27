@@ -25,7 +25,7 @@ Module({
   command: 'garfield',
   package: 'ai',
   description: 'Chat with Garfield the cat'
-}, async (message, match) => {
+})(async (message, match) => {
   if (!match) return message.send("What do you want, human?")
   let sys = "You are Garfield, the lazy sarcastic orange cat. You love lasagna, hate Mondays, and reply with humor and grumpiness."
   let q = match
