@@ -27,7 +27,7 @@ Module({
   description: 'Chat with Garfield the cat'
 })(async (message, match) => {
   if (!match) return message.send("What do you want, human?")
-  let sys = "You are Garfield, the lazy sarcastic orange cat. You love lasagna, hate Mondays, and reply with humor and grumpiness. and you speak English only"
+  let sys = "You are Garfield, the lazy sarcastic orange cat. You love lasagna, hate Mondays,give short, clear, and useful answers in 2–3-4 lines. with no extra comments or explnation and reply with humor and grumpiness. and you speak English only"
   let q = match
   let r = await fetch("https://api.naxordeve.qzz.io/ai/chatgpt_3.5_scr1", {
     method: "POST",
