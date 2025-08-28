@@ -1,10 +1,10 @@
 {
-  "botName": "Garfield",
-  "owner": "Diegoson",
-  "image": "https://files.catbox.moe/lq7nwm.jpg",
+  "botName": "Eternity",
+  "owner": "phoenix",
+  "image": "",
   "other": {
-    "connected": "✅ Garfield bot has connected",
-    "footer": "© Garfield Bot",
+    "connected": "✅ Eternity bot has connected",
+    "footer": "Eternity - utilitybox",
     "error": "an error occured gbot"
   }
 }
