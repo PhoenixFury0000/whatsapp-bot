@@ -1,5 +1,5 @@
 {
-  "name": "whatsapp-bot",
+  "name": "eternity-bot",
   "description": "",
   "repository": "https://github.com/naxordeve/whatsapp-bot",
   "keywords": ["nodejs", "whatsapp", "garfield"],
@@ -11,19 +11,19 @@
     },
     "OWNER_NUMBER": {
       "description": "WhatsApp number of the bot owner",
-      "value": "27686881509"
+      "value": "917973456275"
     },
     "SESSION_ID": {
       "description": "WhatsApp session ID",
       "required": true
     },
     "THEME": {
-      "description": "Bot theme Garfield",
+      "description": "Bot theme phoenix",
       "required": true
     },
     "WORK_TYPE": {
       "description": "Bot work type (private/public)",
-      "value": "private"
+      "value": "public"
     }
   }
 }
