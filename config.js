@@ -8,9 +8,9 @@ module.exports = {
     packname: process.env.PACKNAME || 'ɠαɾϝιҽʅɗ',
     author: process.env.AUTHOR || 'ɳαxσɾ',
     SESSION_ID: process.env.SESSION_ID || '',
-    THEME: process.env.THEME || '',
+    THEME: process.env.THEME || 'Garfield',
     maxFileSize: parseInt(process.env.MAX_FILE_SIZE) || 100 * 1024 * 1024,
     timezone: process.env.TIMEZONE || 'UTC',
     WORK_TYPE: process.env.WORK_TYPE || 'public',
+    STATUS_REACT: isTrue(process.env.STATUS_REACT) || false, // true 
 };
-
