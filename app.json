@@ -1,4 +1,3 @@
-
 {
   "name": "whatsapp-bot",
   "description": "",
@@ -18,8 +17,8 @@
       "description": "WhatsApp session ID",
       "required": true
     },
-    "HASTEBIN": {
-      "description": "Your paste key for session id",
+    "THEME": {
+      "description": "Bot theme Garfield",
       "required": true
     },
     "WORK_TYPE": {
