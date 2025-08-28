@@ -9,69 +9,32 @@ const star = '⛥';
 
 Module({
   command: 'menu',
-  package: 'general',
-  description: 'Show all commands or a specific package',
-})(async (message, match) => {
-  const hostname = os.hostname();
-  const time = new Date().toLocaleTimeString('en-ZA', { timeZone: 'Africa/Johannesburg' });
-  const mode = config.WORK_TYPE || process.env.WORK_TYPE;
-  const ramUsedMB = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
-
-  const grouped = commands
-    .filter(cmd => cmd.command && cmd.command !== 'undefined')
-    .reduce((acc, cmd) => {
-      if (!acc[cmd.package]) acc[cmd.package] = [];
-      acc[cmd.package].push(cmd.command);
-      return acc;
-    }, {});
-
-  const categories = Object.keys(grouped).sort();
-  let _cmd_st = '';
-
-  if (match && grouped[match.toLowerCase()]) {
-    const pack = match.toLowerCase();
-    _cmd_st += `╭───╼「 *${styles.toMonospace(pack.toUpperCase())}* 」\n`;
-    grouped[pack]
-      .sort((a, b) => a.localeCompare(b))
-      .forEach(cmdName => {
-        _cmd_st += `┃ ${styles.toMonospace(cmdName)}\n`;
-      });
-    _cmd_st += `╰──────────╼\n`;
+package: 'general',
+description: 'Show main or fun commands menu',
+})(async (message, match, args) => {
+  if (args && args.includes('--fun')) {
+    await message.reply(`--------[ ♧ Eternity Fun Section ♧ ]---------
+> .tr        ~ Translate Text
+> .chat      ~ Talk with AI
+> .song      ~ Song Downloader
+> .time      ~ Time of any country
+> .wame      ~ Your WhatsApp link
+> .carbon    ~ Create code images
+> .removebg  ~ Remove image background
+> .animequiz ~ Anime trivia game
+------------------------------------
+ETERNITY | THE BEST IS YET TO BE
+------------------------------------`);
   } else {
-    _cmd_st += `╭──╼「 *${styles.toMonospace(theme.botName)}* 」\n`;
-    _cmd_st += `┃ ${styles.toMonospace(star)} Host: ${styles.toMonospace(hostname)}\n`;
-    _cmd_st += `┃ ${styles.toMonospace(star)} User: ${styles.toMonospace(message.pushName)}\n`;
-    _cmd_st += `┃ ${styles.toMonospace(star)} Prefix: ${config.prefix}\n`;
-    _cmd_st += `┃ ${styles.toMonospace(star)} Time: ${styles.toMonospace(time)}\n`;
-    _cmd_st += `┃ ${styles.toMonospace(star)} Mode: ${styles.toMonospace(mode)}\n`;
-    _cmd_st += `┃ ${styles.toMonospace(star)} Ram: ${ramUsedMB} MB\n`;
-    _cmd_st += `╰──────────╼\n\n`;
-
-    if (match && !grouped[match.toLowerCase()]) {
-      _cmd_st += `_not found: ${match}_\n\n`;
-      _cmd_st += `packages:\n`;
-      categories.forEach(cat => {
-        _cmd_st += `- ${cat}\n`;
-      });
-    } else {
-      for (const cat of categories) {
-        _cmd_st += `╭───╼「 *${styles.toMonospace(cat.toUpperCase())}* 」\n`;
-        grouped[cat]
-          .sort((a, b) => a.localeCompare(b))
-          .forEach(cmdName => {
-            _cmd_st += `┃ ${styles.toMonospace(cmdName)}\n`;
-          });
-        _cmd_st += `╰──────────╼\n`;
-      }
-    }
-  }
-
-  _cmd_st += `\n${theme.other?.footer}`;
-  if (theme.image) {
-    await message.send(
-      { image: { url: theme.image }, caption: _cmd_st },
-      { quoted: message }
-    );
+    await message.reply(`--------[ ♧ Eternity ♧ ]---------
+> .ping    ~ Latency Check
+> .alive   ~ Bot Status
+> .menu --fun ~ Fun Commands
+> .define  ~ Urban Dictionary lookup
+> .weather ~ Weather information
+------------------------------------
+ETERNITY | THE BEST IS YET TO BE
+------------------------------------`);
   }
 });
 
