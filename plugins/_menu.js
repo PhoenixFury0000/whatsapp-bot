@@ -38,17 +38,6 @@ ETERNITY | THE BEST IS YET TO BE
   }
 });
 
-Module({
-  command: 'list',
-  package: 'general',
-  description: 'List all available commands',
-})(async (message) => {
-  const aca = commands
-    .filter(cmd => cmd.command && cmd.command !== 'undefined')
-    .map(cmd => cmd.command)
-    .join('\n');
-  await message.send(`*List:*\n${aca}`);
-});
 
 Module({
   command: 'alive',
